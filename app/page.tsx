@@ -1,12 +1,4 @@
-import Products from "@/components/Products";
-import { Suspense } from "react";
-
-const HomePage = () => {
-  return (
-    <div>
-     HomePage
-    </div>
-  );
-};
-
-export default HomePage;
+import Storefront from "@/components/Storefront";
+export default function HomePage() {
+  return <Storefront />;
+}

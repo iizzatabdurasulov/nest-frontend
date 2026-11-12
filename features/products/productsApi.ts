@@ -3,8 +3,26 @@ import { baseApi } from "@/lib/redux/baseApi";
 export interface Product {
   id: number;
   title: string;
+  price: number | string;
+  oldPrice: string | null;
+  desc: string;
+  category: string;
+  isActive: boolean;
+  isSale: boolean;
+  views: number;
+  soldCount: number;
+  createdAt: string;
+  userId: number;
+  image: string | null;
+}
+
+export interface ProductInput {
+  title: string;
   price: number;
-  image: string;
+  oldPrice?: number | null;
+  desc: string;
+  category: string;
+  image?: string | null;
 }
 
 export const productsApi = baseApi.injectEndpoints({
@@ -19,11 +37,12 @@ export const productsApi = baseApi.injectEndpoints({
 
     getProductById: builder.query<Product, number>({
       query: (id) => `/products/${id}`,
+      providesTags: ["Products"],
     }),
 
     // Add products
 
-    addProduct: builder.mutation<Product, Partial<Product>>({
+    addProduct: builder.mutation<Product, ProductInput>({
       query: (newProduct) => ({
         url: "/products",
         method: "POST",
@@ -34,15 +53,30 @@ export const productsApi = baseApi.injectEndpoints({
 
     // Delete products
 
-    deleteProduct: builder.mutation<{ message: string; data: Product }, number>({
-      query: (id) => ({
+    deleteProduct: builder.mutation<{ message: string; data: Product }, number>(
+      {
+        query: (id) => ({
+          url: `/products/${id}`,
+          method: "DELETE",
+        }),
+        invalidatesTags: ["Products"],
+      },
+    ),
+
+    updateProduct: builder.mutation<
+      Product,
+      { id: number; body: ProductInput }
+    >({
+      query: ({ id, body }) => ({
         url: `/products/${id}`,
-        method: "DELETE",
+        method: "PATCH",
+        body,
       }),
       invalidatesTags: ["Products"],
     }),
-
-    // Update product
+    uploadImage: builder.mutation<{ image: string }, FormData>({
+      query: (body) => ({ url: "/products/upload", method: "POST", body }),
+    }),
   }),
 });
 
@@ -51,4 +85,6 @@ export const {
   useGetProductByIdQuery,
   useAddProductMutation,
   useDeleteProductMutation,
+  useUpdateProductMutation,
+  useUploadImageMutation,
 } = productsApi;
