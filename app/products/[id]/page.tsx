@@ -1,38 +1,32 @@
-"use client"
-
-import { useGetProductByIdQuery } from "@/features/products/productsApi";
-import { useParams } from "next/navigation";
 import { Suspense } from "react";
-import ProductImage from "@/components/ProductImage";
+import ProductDetail from "@/components/ProductDetail";
+import { Header, Footer } from "@/components/Storefront";
 
-const ProductDetail = () => {
-  const params = useParams();
+async function Detail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <ProductDetail id={Number(id)} />;
+}
 
-  const {
-    data: product,
-    isLoading,
-    error,
-  } = useGetProductByIdQuery(Number(params.id), { skip: !params.id });
-  if (isLoading) return <p role="status">Yuklanmoqda...</p>;
-  if (error || !product) return <p role="alert">Mahsulot topilmadi yoki server bilan aloqa yo‘q.</p>;
+export default function ProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   return (
-    <div>
-      <div className="w-100 h-100">
-        <ProductImage image={product.image} title={product.title} />
-      </div>
-      <h2>{product?.title}</h2>
-      <span>{product?.category}</span>
-      <p>{product?.desc}</p>
-      <h3>{product?.price} $</h3>
-      <h4 className="line-through">{product?.oldPrice} $</h4>
+    <div className="flex min-h-screen flex-col bg-[#f7f8f2] text-stone-900">
+      <Header active="/products" />
+      <main className="mx-auto w-full max-w-6xl flex-1 px-5 pt-8 pb-16 sm:px-8 lg:px-10">
+        <Suspense
+          fallback={
+            <p className="rounded-2xl border border-zinc-200 bg-white p-8 text-sm text-zinc-400">
+              Yuklanmoqda...
+            </p>
+          }
+        >
+          <Detail params={params} />
+        </Suspense>
+      </main>
+      <Footer />
     </div>
-  );
-};
-
-export default function ProductPage() {
-  return (
-    <Suspense fallback={<p>Yuklanmoqda...</p>}>
-      <ProductDetail />
-    </Suspense>
   );
 }

@@ -18,6 +18,7 @@ export interface Product {
 
 export interface ProductInput {
   title: string;
+  isActive?: boolean;
   price: number;
   oldPrice?: number | null;
   desc: string;
@@ -29,7 +30,10 @@ export const productsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get products
     getProducts: builder.query<Product[], void>({
-      query: () => "/products",
+      query: (currency) => ({
+        url: `/products?currency=${currency}`,
+        method: "GET"
+      }),
       providesTags: ["Products"],
     }),
 
