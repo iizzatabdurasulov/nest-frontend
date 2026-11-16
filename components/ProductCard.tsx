@@ -5,11 +5,12 @@ import { Badge } from "./ui/badge";
 import { Card, CardContent } from "./ui/card";
 import ProductImage from "./ProductImage";
 import ProductPrice from "./ProductPrice";
+import AddToCartButton from "./cart/AddToCartButton";
 export default function ProductCard({ product }: { product: Product }) {
-  const discounted = Number(product.oldPrice) > Number(product.price);
+  const discounted = product.isSale;
   return (
     <Card className="group gap-0 overflow-hidden rounded-2xl border-stone-200/80 py-0 shadow-none transition-all hover:-translate-y-1 hover:border-[#dce9b5] hover:shadow-xl hover:shadow-[#203e31]/5 motion-reduce:transform-none">
-      <Link href={`/products/${product.id}`} className="flex h-full flex-col">
+      <Link href={`/products/${product.id}`} className="flex flex-1 flex-col">
         <div className="relative m-2.5 h-60 overflow-hidden rounded-xl bg-stone-100">
           <ProductImage
             image={product.image}
@@ -40,6 +41,9 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
         </CardContent>
       </Link>
+      <div className="px-5 pb-5">
+        <AddToCartButton productId={product.id} available={product.isActive} />
+      </div>
     </Card>
   );
 }

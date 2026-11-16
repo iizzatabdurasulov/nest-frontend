@@ -14,6 +14,12 @@ export const authApi = baseApi.injectEndpoints({
     >({
       query: (body) => ({ url: "/auth/login", method: "POST", body }),
     }),
+    register: builder.mutation<
+      { accessToken: string },
+      { email: string; password: string }
+    >({
+      query: (body) => ({ url: "/auth/register", method: "POST", body }),
+    }),
     getAdmin: builder.query<
       { userId: number; email: string; role: "admin" | "owner" },
       void
@@ -25,6 +31,7 @@ export const authApi = baseApi.injectEndpoints({
 
 export const {
   useLoginMutation,
+  useRegisterMutation,
   useGetAdminQuery,
   useRestoreSessionQuery,
   useLogoutMutation,

@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { ArrowUpRight } from "@/components/Icon";
-import { Button } from "@/components/ui/button";
 import CurrencySelector from "./CurrencySelector";
 import Brand from "./Brand";
+import AccountMenu from "./AccountMenu";
+import CartLink from "@/components/cart/CartLink";
 import { cn } from "@/lib/utils";
 export default function SiteHeader({ active = "/" }: { active?: string }) {
   return (
@@ -34,11 +34,8 @@ export default function SiteHeader({ active = "/" }: { active?: string }) {
         </nav>
         <div className="flex items-center gap-2">
           <CurrencySelector />
-          <Button asChild variant="outline" size="sm" className="rounded-full">
-            <Link href="/admin">
-              Admin panel <ArrowUpRight />
-            </Link>
-          </Button>
+          <CartLink active={active === "/cart"} />
+          <AccountMenu />
         </div>
       </div>
     </header>

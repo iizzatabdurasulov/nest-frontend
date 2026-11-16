@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "@/components/Icon";
 import type { Product } from "@/features/products/productsApi";
 import ProductPrice from "@/components/ProductPrice";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 export default function ProductInformation({ product }: { product: Product }) {
@@ -27,6 +28,9 @@ export default function ProductInformation({ product }: { product: Product }) {
       <p className="mb-6 text-xs text-stone-400">
         Mahsulot raqami: #{product.id}
       </p>
+      <div className="mb-4 max-w-sm">
+        <AddToCartButton productId={product.id} available={product.isActive} />
+      </div>
       <Button asChild variant="outline">
         <Link href="/products">
           <ArrowLeft /> Katalogga qaytish
