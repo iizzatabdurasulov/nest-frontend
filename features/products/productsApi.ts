@@ -4,6 +4,7 @@ export interface Product {
   id: number;
   title: string;
   price: number | string;
+  deliveryPrice: number | string;
   oldPrice: string | null;
   desc: string;
   category: string;
@@ -20,6 +21,7 @@ export interface ProductInput {
   title: string;
   isActive?: boolean;
   price: number;
+  deliveryPrice?: number;
   oldPrice?: number | null;
   desc: string;
   category: string;
@@ -52,7 +54,7 @@ export const productsApi = baseApi.injectEndpoints({
         method: "POST",
         body: newProduct,
       }),
-      invalidatesTags: ["Products"],
+      invalidatesTags: ["Products", "Cart"],
     }),
 
     // Delete products
@@ -63,7 +65,7 @@ export const productsApi = baseApi.injectEndpoints({
           url: `/products/${id}`,
           method: "DELETE",
         }),
-        invalidatesTags: ["Products"],
+        invalidatesTags: ["Products", "Cart"],
       },
     ),
 
@@ -76,7 +78,7 @@ export const productsApi = baseApi.injectEndpoints({
         method: "PATCH",
         body,
       }),
-      invalidatesTags: ["Products"],
+      invalidatesTags: ["Products", "Cart"],
     }),
     uploadImage: builder.mutation<{ image: string }, FormData>({
       query: (body) => ({ url: "/products/upload", method: "POST", body }),

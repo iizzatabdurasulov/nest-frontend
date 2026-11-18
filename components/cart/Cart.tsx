@@ -22,8 +22,6 @@ import { useLogoutMutation } from "@/features/auth/authApi";
 import { setAccessToken } from "@/features/auth/authSlice";
 import {
   useGetCartQuery,
-  useAddToCartMutation,
-  useDecrementCartItemMutation,
   useRemoveCartItemMutation,
   useClearCartMutation,
 } from "@/features/cart/cartApi";
@@ -31,7 +29,7 @@ import { useCartSession } from "@/hooks/useCartSession";
 import { apiError } from "@/lib/apiError";
 import { baseApi } from "@/lib/redux/baseApi";
 import CustomerLogin from "@/components/auth/CustomerLogin";
-import QuantityControl from "./QuantityControl";
+import CartQuantityControl from "./CartQuantityControl";
 
 export default function Cart() {
   const dispatch = useDispatch();
@@ -44,8 +42,6 @@ export default function Cart() {
     error: queryError,
     refetch,
   } = useGetCartQuery(undefined, { skip: !accessToken });
-  const [add, adding] = useAddToCartMutation();
-  const [decrement, decrementing] = useDecrementCartItemMutation();
   const [remove, removing] = useRemoveCartItemMutation();
   const [clear, clearing] = useClearCartMutation();
   const [endSession, loggingOut] = useLogoutMutation();
@@ -53,12 +49,9 @@ export default function Cart() {
   const [message, setMessage] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
   const busy =
-    adding.isLoading ||
-    decrementing.isLoading ||
     removing.isLoading ||
     clearing.isLoading ||
-    loggingOut.isLoading ||
-    isFetching;
+    loggingOut.isLoading;
 
   async function change(action: () => Promise<unknown>, success: string) {
     setError("");
@@ -79,13 +72,12 @@ export default function Cart() {
 
   const items = cart?.items ?? [];
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
-  const total = items.reduce(
-    (sum, item) => sum + Number(item.product.price) * item.quantity,
-    0,
-  );
+  const subTotal = cart?.subTotal ?? 0;
+  const deliveryPrice = cart?.deliveryPrice ?? 0;
+  const total = cart?.totalPrice ?? 0;
 
   let content;
-  if (!sessionInitialized || (accessToken && isLoading)) {
+  if (!sessionInitialized || (accessToken && isLoading && cart === undefined)) {
     content =
       !sessionInitialized && sessionError ? (
         <EmptyState
@@ -109,7 +101,7 @@ export default function Cart() {
     content = (
       <CustomerLogin description="Mahsulotlarni savatchaga saqlash uchun hisobingizga kiring." />
     );
-  } else if (queryError) {
+  } else if (queryError && cart === undefined) {
     content = (
       <EmptyState
         error
@@ -173,23 +165,13 @@ export default function Cart() {
                   </p>
                 )}
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <QuantityControl
+                  <CartQuantityControl
+                    productId={productId}
                     quantity={quantity}
                     productTitle={product.title}
                     disabled={busy}
-                    canIncrease={product.isActive}
-                    onIncrease={() =>
-                      change(
-                        () => add(productId).unwrap(),
-                        "Mahsulot miqdori oshirildi.",
-                      )
-                    }
-                    onDecrease={() =>
-                      change(
-                        () => decrement(productId).unwrap(),
-                        "Mahsulot miqdori kamaytirildi.",
-                      )
-                    }
+                    available={product.isActive}
+                    onError={setError}
                   />
                   <Button
                     variant="ghost"
@@ -221,6 +203,43 @@ export default function Cart() {
               <dt>Mahsulotlar soni</dt>
               <dd>{count} ta</dd>
             </div>
+            <div className="flex justify-between gap-3 text-stone-500">
+              <dt>Mahsulotlar summasi</dt>
+              <dd><CurrencyAmount amount={subTotal} /></dd>
+            </div>
+            <div className="border-t border-stone-100 pt-4">
+              <dt className="font-medium text-stone-700">Yetkazib berish</dt>
+              <dd className="mt-3">
+                <ul className="space-y-3" aria-label="Mahsulotlar bo‘yicha yetkazib berish narxlari">
+                  {items.map(({ product, productId, quantity }) => (
+                    <li key={productId} className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/products/${productId}`}
+                          className="block text-xs leading-5 wrap-anywhere text-stone-600 hover:text-[#244c3b]"
+                        >
+                          {product.title}
+                        </Link>
+                        <p className="mt-1 text-xs text-stone-400">
+                          <CurrencyAmount amount={product.deliveryPrice} /> × {quantity} dona
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-right text-xs leading-5 font-medium text-stone-700">
+                        {Number(product.deliveryPrice) === 0 ? "Bepul" : (
+                          <CurrencyAmount amount={Number(product.deliveryPrice) * quantity} />
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-4 flex justify-between gap-3 border-t border-stone-100 pt-3 text-stone-500">
+                  <span>Jami yetkazib berish</span>
+                  <span className="shrink-0 font-medium text-stone-700">
+                    {deliveryPrice === 0 ? "Bepul" : <CurrencyAmount amount={deliveryPrice} />}
+                  </span>
+                </div>
+              </dd>
+            </div>
             <div className="flex flex-wrap justify-between gap-3 border-t border-stone-100 pt-4 text-base font-semibold">
               <dt>Jami</dt>
               <dd>
@@ -229,7 +248,7 @@ export default function Cart() {
             </div>
           </dl>
           <p className="mt-4 text-xs leading-5 text-stone-400">
-            Yetkazib berish narxi hisobga olinmagan.
+            Har bir mahsulotning yetkazib berish narxi uning soniga ko‘paytirilib, jamlanadi.
           </p>
           <Button asChild className="mt-6 w-full rounded-xl">
             <Link href="/products">Xaridni davom ettirish</Link>
@@ -286,9 +305,17 @@ export default function Cart() {
           {error}
         </p>
       )}
-      <p role="status" className="mb-4 text-sm text-[#244c3b]">
+      <p role="status" className="mb-4 min-h-5 text-sm text-[#244c3b]">
         {message}
       </p>
+      {queryError && cart !== undefined && (
+        <div role="alert" className="mb-4 flex flex-wrap items-center gap-3 text-sm text-rose-600">
+          <p>Savatchani yangilab bo‘lmadi. {apiError(queryError)}</p>
+          <Button variant="outline" size="sm" disabled={isFetching} onClick={() => refetch()}>
+            Qayta urinish
+          </Button>
+        </div>
+      )}
       {content}
       <AlertDialog
         open={confirmClear && !!accessToken}

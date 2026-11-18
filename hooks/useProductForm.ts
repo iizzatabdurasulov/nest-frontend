@@ -15,6 +15,7 @@ type Options = { product: Product | null; onSaved: () => void };
 export function useProductForm({ product, onSaved }: Options) {
   const [title, setTitle] = useState(product?.title ?? "");
   const [price, setPrice] = useState(String(product?.price ?? ""));
+  const [deliveryPrice, setDeliveryPrice] = useState(String(product?.deliveryPrice ?? 0));
   const [oldPrice, setOldPrice] = useState(product?.oldPrice ?? "");
   const [desc, setDesc] = useState(product?.desc ?? "");
   const [category, setCategory] = useState(product?.category ?? "");
@@ -33,6 +34,11 @@ export function useProductForm({ product, onSaved }: Options) {
     setError("");
     if (title.trim().length < 2) {
       setError("Mahsulot nomi kamida 2 ta belgidan iborat bo‘lsin.");
+      return;
+    }
+    const delivery = deliveryPrice.trim() === "" ? 0 : Number(deliveryPrice);
+    if (!Number.isFinite(delivery) || delivery < 0) {
+      setError("Yetkazib berish narxi 0 yoki undan katta son bo‘lsin.");
       return;
     }
     if (
@@ -57,6 +63,7 @@ export function useProductForm({ product, onSaved }: Options) {
       const body: ProductInput = {
         title: title.trim(),
         price: Number(price),
+        deliveryPrice: delivery,
         oldPrice: oldPrice === "" ? null : Number(oldPrice),
         desc,
         category: category.trim() || "Uncategorized",
@@ -81,6 +88,8 @@ export function useProductForm({ product, onSaved }: Options) {
     setPrice,
     oldPrice,
     setOldPrice,
+    deliveryPrice,
+    setDeliveryPrice,
     desc,
     setDesc,
     category,

@@ -56,6 +56,18 @@ export default function ProductFields({
             />
           </FormField>
         </div>
+        <FormField label="Yetkazib berish narxi ($)">
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.deliveryPrice}
+            onChange={(e) => form.setDeliveryPrice(e.target.value)}
+          />
+          <span className="text-xs font-normal text-stone-500">
+            Bepul yetkazib berish uchun 0 kiriting. Bo‘sh qoldirilsa ham 0 saqlanadi.
+          </span>
+        </FormField>
         <FormField label="Kategoriya">
           <Input
             value={form.category}

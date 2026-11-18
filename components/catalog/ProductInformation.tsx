@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "@/components/Icon";
 import type { Product } from "@/features/products/productsApi";
+import CurrencyAmount from "@/components/shared/CurrencyAmount";
 import ProductPrice from "@/components/ProductPrice";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,11 @@ export default function ProductInformation({ product }: { product: Product }) {
         price={product.price}
         oldPrice={product.oldPrice}
       />
+      <p className="mt-4 text-sm text-stone-500">
+        Yetkazib berish: {Number(product.deliveryPrice) === 0
+          ? "Bepul"
+          : <CurrencyAmount amount={product.deliveryPrice} />}
+      </p>
       <div className="my-7 border-y border-stone-100 py-6">
         <h2 className="mb-3 text-sm font-semibold">Mahsulot haqida</h2>
         <p className="text-sm leading-7 whitespace-pre-line wrap-anywhere text-stone-500">

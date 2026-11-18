@@ -7,6 +7,7 @@ export default function QuantityControl({
   quantity,
   productTitle,
   disabled = false,
+  pending = false,
   canIncrease = true,
   onIncrease,
   onDecrease,
@@ -14,6 +15,7 @@ export default function QuantityControl({
   quantity: number;
   productTitle: string;
   disabled?: boolean;
+  pending?: boolean;
   canIncrease?: boolean;
   onIncrease: () => void;
   onDecrease: () => void;
@@ -22,6 +24,7 @@ export default function QuantityControl({
     <div className="flex items-center gap-2.5">
       <div
         role="group"
+        aria-busy={pending}
         aria-label={`${productTitle} miqdori`}
         className="inline-flex items-center rounded-full border border-stone-200 bg-stone-50 p-1"
       >
@@ -29,7 +32,7 @@ export default function QuantityControl({
           type="button"
           variant="ghost"
           size="icon-sm"
-          className="size-9 rounded-full text-stone-600 hover:bg-white hover:text-[#244c3b] disabled:opacity-30"
+          className={`size-9 rounded-full text-stone-600 hover:bg-white hover:text-[#244c3b] ${pending ? "disabled:opacity-100" : "disabled:opacity-30"}`}
           disabled={disabled || quantity <= 1}
           aria-label={`${productTitle} miqdorini bittaga kamaytirish`}
           onClick={onDecrease}
@@ -47,7 +50,7 @@ export default function QuantityControl({
           type="button"
           variant="ghost"
           size="icon-sm"
-          className="size-9 rounded-full bg-white text-[#244c3b] shadow-xs hover:bg-[#e3e9d6] disabled:opacity-30"
+          className={`size-9 rounded-full bg-white text-[#244c3b] shadow-xs hover:bg-[#e3e9d6] ${pending ? "disabled:opacity-100" : "disabled:opacity-30"}`}
           disabled={disabled || !canIncrease}
           aria-label={`${productTitle} miqdorini bittaga oshirish`}
           onClick={onIncrease}
