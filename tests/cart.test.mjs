@@ -141,16 +141,19 @@ function quantityButtons(props = {}) {
       productTitle: "Stul",
       onIncrease: () => {},
       onDecrease: () => {},
+      onQuantityChange: () => {},
       ...props,
     }),
   );
   const buttons = html.match(/<button\b[^>]*>/g);
-  return { html, minus: buttons[0], plus: buttons[1] };
+  return { html, minus: buttons[0], plus: buttons[2] };
 }
 
 test("quantity control shows both actions around the current quantity", () => {
   const { html, minus, plus } = quantityButtons({ quantity: 12 });
-  expect(html).toContain(">12</output>");
+  expect(html).toContain('value="12"');
+  expect(html).toContain('inputMode="numeric"');
+  expect(html).toContain("Stul sonini tozalash");
   expect(minus).toContain("bittaga kamaytirish");
   expect(plus).toContain("bittaga oshirish");
   expect(minus).not.toContain('disabled=""');
@@ -315,4 +318,36 @@ test("background refetch retains the cart and totals without a loading screen", 
   while (!finish) await Bun.sleep(1);
   finish(Response.json(quantityCart()));
   await request.unwrap();
+});
+
+
+test("manual quantity uses one PATCH and updates quantity and totals immediately", async () => {
+  const store = setup();
+  await store.dispatch(cartApi.util.upsertQueryData("getCart", undefined, quantityCart()));
+  let finish;
+  let sent;
+  globalThis.fetch = (request) => {
+    sent = request;
+    return new Promise((resolve) => { finish = resolve; });
+  };
+  const request = store.dispatch(cartApi.endpoints.setCartQuantity.initiate({ productId: 5, quantity: 116 }));
+  expect(cachedCart(store).items[0].quantity).toBe(116);
+  expect(cachedCart(store).totalPrice).toBe(1508);
+  while (!finish) await Bun.sleep(1);
+  expect(sent.method).toBe("PATCH");
+  expect(new URL(sent.url).pathname).toBe("/cart/items/5");
+  expect(await sent.json()).toEqual({ quantity: 116 });
+  finish(Response.json({ count: 1 }));
+  await request.unwrap();
+});
+
+test("failed manual quantity restores the previous quantity and totals", async () => {
+  const store = setup();
+  await store.dispatch(cartApi.util.upsertQueryData("getCart", undefined, quantityCart()));
+  store.dispatch(cartApi.endpoints.getCart.initiate());
+  globalThis.fetch = async (request) => request.method === "GET"
+    ? Response.json(quantityCart())
+    : Response.json({ message: "Unavailable" }, { status: 500 });
+  await store.dispatch(cartApi.endpoints.setCartQuantity.initiate({ productId: 5, quantity: 116 }));
+  expect(cachedCart(store)).toEqual(quantityCart());
 });

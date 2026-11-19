@@ -92,6 +92,28 @@ export const cartApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Cart"],
     }),
+    setCartQuantity: builder.mutation<{ count: number }, { productId: number; quantity: number }>({
+      query: ({ productId, quantity }) => ({
+        url: `/cart/items/${productId}`,
+        method: "PATCH",
+        body: { quantity },
+      }),
+      async onQueryStarted({ productId, quantity }, { dispatch, queryFulfilled }) {
+        let appliedDelta = 0;
+        dispatch(cartApi.util.updateQueryData("getCart", undefined, (cart) => {
+          const item = cart?.items.find((item) => item.productId === productId);
+          if (item) appliedDelta = changeCachedQuantity(cart, productId, quantity - item.quantity);
+        }));
+        try {
+          await queryFulfilled;
+        } catch {
+          dispatch(cartApi.util.updateQueryData("getCart", undefined, (cart) => {
+            changeCachedQuantity(cart, productId, -appliedDelta);
+          }));
+        }
+      },
+      invalidatesTags: ["Cart"],
+    }),
     clearCart: builder.mutation<{ count: number }, void>({
       query: () => ({ url: "/cart", method: "DELETE" }),
       invalidatesTags: ["Cart"],
@@ -105,4 +127,5 @@ export const {
   useRemoveCartItemMutation,
   useDecrementCartItemMutation,
   useClearCartMutation,
+  useSetCartQuantityMutation,
 } = cartApi;

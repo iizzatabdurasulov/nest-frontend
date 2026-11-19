@@ -1,6 +1,7 @@
 "use client";
 
-import { Minus, Plus } from "@/components/Icon";
+import { useRef, useState } from "react";
+import { Minus, Plus, X } from "@/components/Icon";
 import { Button } from "@/components/ui/button";
 
 export default function QuantityControl({
@@ -11,6 +12,7 @@ export default function QuantityControl({
   canIncrease = true,
   onIncrease,
   onDecrease,
+  onQuantityChange,
 }: {
   quantity: number;
   productTitle: string;
@@ -19,7 +21,21 @@ export default function QuantityControl({
   canIncrease?: boolean;
   onIncrease: () => void;
   onDecrease: () => void;
+  onQuantityChange: (quantity: number) => void;
 }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const value = draft ?? String(quantity);
+
+  function commit() {
+    if (draft === null) return;
+    const next = Number(draft);
+    setDraft(null);
+    if (!disabled && draft !== "" && Number.isInteger(next) && next >= 1 && next <= 2147483647 && (canIncrease || next <= quantity)) {
+      onQuantityChange(next);
+    }
+  }
+
   return (
     <div className="flex items-center gap-2.5">
       <div
@@ -39,13 +55,48 @@ export default function QuantityControl({
         >
           <Minus className="size-4" />
         </Button>
-        <output
-          aria-live="polite"
-          aria-atomic="true"
-          className="min-w-10 px-2 text-center text-sm font-semibold text-stone-900 tabular-nums"
+        <input
+          ref={inputRef}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          aria-label={`${productTitle} soni`}
+          autoComplete="off"
+          disabled={disabled}
+          value={value}
+          onChange={(event) => {
+            if (/^\d*$/.test(event.target.value)) setDraft(event.target.value);
+          }}
+          onFocus={(event) => event.target.select()}
+          onBlur={commit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              event.currentTarget.blur();
+            }
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setDraft(null);
+            }
+          }}
+          className="h-9 min-w-10 rounded-md bg-transparent px-1 text-center text-sm font-semibold text-stone-900 tabular-nums outline-none focus:ring-2 focus:ring-[#65804a]/40"
+          style={{ width: `${Math.max(3, value.length + 1)}ch`, maxWidth: "12ch" }}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="size-7 rounded-full text-stone-400 hover:bg-white hover:text-stone-700"
+          disabled={disabled || value === ""}
+          aria-label={`${productTitle} sonini tozalash`}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => {
+            setDraft("");
+            inputRef.current?.focus();
+          }}
         >
-          {quantity}
-        </output>
+          <X className="size-3.5" />
+        </Button>
         <Button
           type="button"
           variant="ghost"
