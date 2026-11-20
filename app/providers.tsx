@@ -1,6 +1,7 @@
 "use client";
 
 import { Provider } from "react-redux";
+import { Toaster } from "@/components/ui/sonner";
 import { store } from "@/lib/redux/store";
 
 export default function Providers({
@@ -13,6 +14,7 @@ export default function Providers({
   return (
     <Provider store={store}>
       {children}
+      <Toaster />
     </Provider>
   );
 }

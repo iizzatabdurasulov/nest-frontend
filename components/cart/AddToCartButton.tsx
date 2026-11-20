@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { ShoppingCart, CheckIcon } from "@/components/Icon";
+import { ShoppingCart } from "@/components/Icon";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { useAddToCartMutation } from "@/features/cart/cartApi";
 import { useCartSession } from "@/hooks/useCartSession";
 import { apiError } from "@/lib/apiError";
@@ -17,16 +17,12 @@ export default function AddToCartButton({
 }) {
   const { accessToken, sessionInitialized } = useCartSession();
   const [add, { isLoading }] = useAddToCartMutation();
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   async function addItem() {
-    setError("");
-    setMessage("");
     try {
       await add(productId).unwrap();
-      setMessage("Savatchaga qo‘shildi");
+      toast.success("Mahsulot savatga qo‘shildi.");
     } catch (error) {
-      setError(apiError(error));
+      toast.error(apiError(error));
     }
   }
   return (
@@ -46,23 +42,13 @@ export default function AddToCartButton({
           }
           onClick={addItem}
         >
-          {message ? <CheckIcon /> : <ShoppingCart />}
+          <ShoppingCart />
           {!available
             ? "Sotuvda yo‘q"
             : isLoading
               ? "Qo‘shilmoqda..."
               : "Savatchaga qo‘shish"}
         </Button>
-      )}
-      {message && (
-        <p role="status" className="text-xs text-[#244c3b]">
-          {message}
-        </p>
-      )}
-      {error && (
-        <p role="alert" className="text-xs text-rose-600">
-          {error}
-        </p>
       )}
     </div>
   );
